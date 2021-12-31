@@ -7,13 +7,14 @@ import {
   Post,
   Req,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Public } from 'src/publicDecorator';
 import { User } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { comparePassword, hashPassword } from './passwords';
 
 @Controller('auth')
@@ -24,7 +25,6 @@ export class AuthController {
   ) {}
 
   @Post('/register')
-  @Public()
   async register(@Body() registerDto: RegisterDto) {
     if (registerDto.password != registerDto.passwordConfirm) {
       throw new BadRequestException();
@@ -41,7 +41,6 @@ export class AuthController {
   }
 
   @Post('/login')
-  @Public()
   async login(@Body() loginDto: LoginDto) {
     const user = await this.usersService.findOne({ email: loginDto.email });
     if (!user) {
@@ -56,6 +55,7 @@ export class AuthController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/me')
   async me(@Req() req) {
     return {
